@@ -11,6 +11,9 @@ pub export fn abort() callconv(.c) noreturn {
 var AT_EXIT_CALLBACKS = [_]?*const fn () callconv(.c) void{null} ** 32;
 var AT_EXIT_MUTEX: std.Thread.Mutex = .{};
 
+var AT_QUICK_EXIT_CALLBACKS = [_]?*const fn () callconv(.c) void{null} ** 32;
+var AT_QUICK_EXIT_MUTEX: std.Thread.Mutex = .{};
+
 export fn atexit(callback: *const fn () callconv(.c) void) callconv(.c) c_int {
     AT_EXIT_MUTEX.lock();
     defer AT_EXIT_MUTEX.unlock();
@@ -24,11 +27,37 @@ export fn atexit(callback: *const fn () callconv(.c) void) callconv(.c) c_int {
     return 1;
 }
 
+export fn at_quick_exit(callback: *const fn () callconv(.c) void) callconv(.c) c_int {
+    AT_QUICK_EXIT_MUTEX.lock();
+    defer AT_QUICK_EXIT_MUTEX.unlock();
+
+    for (&AT_QUICK_EXIT_CALLBACKS) |*ptr| {
+        if (ptr.* == null) {
+            ptr.* = callback;
+            return 0;
+        }
+    }
+    return 1;
+}
+
 pub export fn exit(exit_code: c_int) callconv(.c) noreturn {
     AT_EXIT_MUTEX.lock();
     defer AT_EXIT_MUTEX.unlock();
 
     for (AT_EXIT_CALLBACKS) |optional| {
+        if (optional) |callback| {
+            callback();
+        }
+    }
+
+    _Exit(exit_code);
+}
+
+pub export fn quick_exit(exit_code: c_int) callconv(.c) noreturn {
+    AT_QUICK_EXIT_MUTEX.lock();
+    defer AT_QUICK_EXIT_MUTEX.unlock();
+
+    for (AT_QUICK_EXIT_CALLBACKS) |optional| {
         if (optional) |callback| {
             callback();
         }
