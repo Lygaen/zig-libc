@@ -42,8 +42,6 @@ fn addTests(b: *std.Build, lib: *std.Build.Step.Compile, target: std.Build.Resol
         if (entry.kind != .file)
             continue;
 
-        std.log.info("Adding & running test {s}", .{entry.name});
-
         const exe = b.addExecutable(.{
             .name = std.fs.path.stem(entry.name),
             .link_libc = false,
@@ -57,7 +55,6 @@ fn addTests(b: *std.Build, lib: *std.Build.Step.Compile, target: std.Build.Resol
         exe.linkLibrary(lib);
 
         const install_artifact = b.addInstallArtifact(exe, .{});
-        b.getInstallStep().dependOn(&install_artifact.step);
         test_step.dependOn(&install_artifact.step);
 
         const run = b.addRunArtifact(exe);
