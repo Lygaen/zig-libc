@@ -21,9 +21,12 @@ export fn atexit(callback: *const fn () callconv(.c) void) callconv(.c) c_int {
     for (&AT_EXIT_CALLBACKS) |*ptr| {
         if (ptr.* == null) {
             ptr.* = callback;
+            globals.trace("Registering function {}", @src(), .{callback});
             return 0;
         }
     }
+
+    globals.trace("Reached max-capacity for function {}", @src(), .{callback});
     return 1;
 }
 
@@ -34,15 +37,20 @@ export fn at_quick_exit(callback: *const fn () callconv(.c) void) callconv(.c) c
     for (&AT_QUICK_EXIT_CALLBACKS) |*ptr| {
         if (ptr.* == null) {
             ptr.* = callback;
+            globals.trace("Registering function {}", @src(), .{callback});
             return 0;
         }
     }
+
+    globals.trace("Reached max-capacity for function {}", @src(), .{callback});
     return 1;
 }
 
 pub export fn exit(exit_code: c_int) callconv(.c) noreturn {
     AT_EXIT_MUTEX.lock();
     defer AT_EXIT_MUTEX.unlock();
+
+    globals.trace("Clean exiting program", @src(), .{});
 
     for (AT_EXIT_CALLBACKS) |optional| {
         if (optional) |callback| {
@@ -57,6 +65,8 @@ pub export fn quick_exit(exit_code: c_int) callconv(.c) noreturn {
     AT_QUICK_EXIT_MUTEX.lock();
     defer AT_QUICK_EXIT_MUTEX.unlock();
 
+    globals.trace("Clean exiting program", @src(), .{});
+
     for (AT_QUICK_EXIT_CALLBACKS) |optional| {
         if (optional) |callback| {
             callback();
@@ -68,11 +78,14 @@ pub export fn quick_exit(exit_code: c_int) callconv(.c) noreturn {
 
 pub var ENV_MAP: std.StringHashMap([*:0]u8) = undefined;
 
-pub export fn getenv(name: ?*const [:0]u8) ?[*:0]u8 {
+pub export fn getenv(name: ?[*:0]u8) ?[*:0]u8 {
     if (name == null) return null;
-    return ENV_MAP.get(name.?.*) orelse null;
+    globals.trace("Requesting env '{s}'", @src(), .{name.?});
+
+    return ENV_MAP.get(std.mem.span(name.?)) orelse null;
 }
 
 pub export fn _Exit(exit_code: c_int) callconv(.c) noreturn {
+    globals.trace("Force exiting program", @src(), .{});
     std.process.exit(@intCast(exit_code));
 }
