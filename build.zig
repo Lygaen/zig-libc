@@ -15,6 +15,11 @@ pub fn build(b: *std.Build) void {
     });
     libc_mod.addOptions("options", options);
 
+    if (target.getOs().tag == .windows) {
+        libc_mod.linkSystemLibrary("ntdll", .{});
+        libc_mod.linkSystemLibrary("kernel32", .{});
+    }
+
     const libc_out = b.addLibrary(.{
         .name = "zig_libc",
         .root_module = libc_mod,

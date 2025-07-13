@@ -7,7 +7,7 @@ const c = struct {
     extern fn main(argc: c_int, argv: [*c]?[*:0]u8) callconv(.C) c_int;
 };
 
-fn __main() callconv(.c) void {
+export fn __main() callconv(.c) void {
     //WINDOWS compatibility stuff ?
     //Link error only on windows...
 }
