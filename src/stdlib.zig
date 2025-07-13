@@ -66,6 +66,13 @@ pub export fn quick_exit(exit_code: c_int) callconv(.c) noreturn {
     _Exit(exit_code);
 }
 
+pub var ENV_MAP: std.StringHashMap([*:0]u8) = undefined;
+
+pub export fn getenv(name: ?*const [:0]u8) ?[*:0]u8 {
+    if (name == null) return null;
+    return ENV_MAP.get(name.?.*) orelse null;
+}
+
 pub export fn _Exit(exit_code: c_int) callconv(.c) noreturn {
     std.process.exit(@intCast(exit_code));
 }
