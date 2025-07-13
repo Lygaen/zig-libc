@@ -15,7 +15,7 @@ pub fn build(b: *std.Build) void {
     });
     libc_mod.addOptions("options", options);
 
-    if (target.getOs().tag == .windows) {
+    if (target.result.os.tag == .windows) {
         libc_mod.linkSystemLibrary("ntdll", .{});
         libc_mod.linkSystemLibrary("kernel32", .{});
     }
