@@ -9,9 +9,12 @@ pub export fn abort() callconv(.c) noreturn {
 }
 
 var AT_EXIT_CALLBACKS = [_]?*const fn () callconv(.c) void{null} ** 32;
+var AT_EXIT_MUTEX: std.Thread.Mutex = .{};
 
 export fn atexit(callback: *const fn () callconv(.c) void) callconv(.c) c_int {
-    //TODO make it thread-safe with a mutex
+    AT_EXIT_MUTEX.lock();
+    defer AT_EXIT_MUTEX.unlock();
+
     for (&AT_EXIT_CALLBACKS) |*ptr| {
         if (ptr.* == null) {
             ptr.* = callback;
@@ -22,6 +25,9 @@ export fn atexit(callback: *const fn () callconv(.c) void) callconv(.c) c_int {
 }
 
 pub export fn exit(exit_code: c_int) callconv(.c) noreturn {
+    AT_EXIT_MUTEX.lock();
+    defer AT_EXIT_MUTEX.unlock();
+
     for (AT_EXIT_CALLBACKS) |optional| {
         if (optional) |callback| {
             callback();
