@@ -1,8 +1,19 @@
 # ZIG LIBC
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="/docs/white-logo.svg">
+  <source media="(prefers-color-scheme: light)" srcset="/docs/black-logo.svg">
+  <img alt="Humanmade mark." src="/docs/black-logo.svg">
+</picture>
+[![Build and Test](https://github.com/Lygaen/zig-libc/actions/workflows/build.yml/badge.svg)](https://github.com/Lygaen/zig-libc/actions/workflows/build.yml)
+![GitHub License](https://img.shields.io/github/license/Lygaen/zig-libc)
+
 A rewrite of the LIBC library in Zig !
 Currently in a very, *very* alpha state, doesn't do a lot of things.
+
 It aims to **ONLY** depend on zig's std.
+
 If the behavior is different from `musl`/`glibc`/... then it is a **bug**. It aims for seamless integration / replacement.
+
 It also has a **tracing** feature to allow you to follow your libc calls.
 
 ## Usage / Build
