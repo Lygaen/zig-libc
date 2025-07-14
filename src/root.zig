@@ -12,7 +12,7 @@ export fn __main() callconv(.c) void {
     //Link error only on windows...
 }
 
-pub fn main() !u8 {
+pub fn main() !void {
     globals.trace("Reaching entrypoint", @src(), .{});
 
     defer {
@@ -39,7 +39,7 @@ pub fn main() !u8 {
 
     globals.trace("Main function exited with {}", @src(), .{ret});
 
-    return @intCast(ret);
+    stdlib.exit(ret);
 }
 
 fn loadENV() !@TypeOf(stdlib.ENV_MAP) {
