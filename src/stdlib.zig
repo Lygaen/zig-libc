@@ -19,7 +19,13 @@ pub export fn malloc(memory_size: usize) callconv(.c) ?*anyopaque {
     return ptr.ptr + MAX_ALIGN;
 }
 
-pub export fn calloc(element_count: usize, element_size: usize) ?*anyopaque {
+pub export fn aligned_alloc(alignement: usize, memory_size: usize) callconv(.c) ?*anyopaque {
+    _ = alignement;
+    globals.trace("STUB - passing to malloc", @src(), .{});
+    return malloc(memory_size);
+}
+
+pub export fn calloc(element_count: usize, element_size: usize) callconv(.c) ?*anyopaque {
     const size = element_count * element_size;
     const ptr = malloc(size);
 
@@ -42,7 +48,7 @@ pub export fn free(pointer: ?*anyopaque) callconv(.c) void {
     globals.allocator.free(len_ptr[0..total_len]);
 }
 
-pub export fn realloc(pointer: ?*anyopaque, memory_size: usize) ?*anyopaque {
+pub export fn realloc(pointer: ?*anyopaque, memory_size: usize) callconv(.c) ?*anyopaque {
     if (pointer == null) return null;
 
     const len_ptr: [*]align(MAX_ALIGN) u8 = @ptrFromInt(@intFromPtr(pointer.?) - MAX_ALIGN);
