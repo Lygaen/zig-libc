@@ -3,7 +3,8 @@
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
-void *aligned_alloc(size_t alignement, size_t memory_size);
+//Find a way to implement without problems :(
+//void *aligned_alloc(size_t alignement, size_t memory_size);
 void *calloc(size_t element_count, size_t element_size);
 void free(void* pointer);
 void *malloc(size_t memory_size);

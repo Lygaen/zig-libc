@@ -3,6 +3,60 @@ const builtin = @import("builtin");
 
 const globals = @import("globals.zig");
 
+const MAX_ALIGN = 16;
+
+comptime {
+    if (MAX_ALIGN * 8 < @bitSizeOf(usize))
+        @compileError("Usize is wayyyy too big.");
+}
+
+pub export fn malloc(memory_size: usize) callconv(.c) ?*anyopaque {
+    const ptr = globals.allocator.alignedAlloc(u8, MAX_ALIGN, memory_size + MAX_ALIGN) catch return null;
+    std.mem.writeInt(usize, ptr[0..@sizeOf(usize)], @intCast(memory_size), .little);
+
+    globals.trace("Allocating {} bytes at 0x{X}", @src(), .{ memory_size, @intFromPtr(ptr.ptr) + MAX_ALIGN });
+
+    return ptr.ptr + MAX_ALIGN;
+}
+
+pub export fn calloc(element_count: usize, element_size: usize) ?*anyopaque {
+    const size = element_count * element_size;
+    const ptr = malloc(size);
+
+    if (ptr != null) {
+        globals.trace("Zeroing memory at 0x{X}", @src(), .{@intFromPtr(ptr)});
+        @memset(@as([*]u8, @ptrCast(ptr.?))[0..size], 0);
+    }
+
+    return ptr;
+}
+
+pub export fn free(pointer: ?*anyopaque) callconv(.c) void {
+    if (pointer == null) return;
+
+    const len_ptr: [*]align(MAX_ALIGN) u8 = @ptrFromInt(@intFromPtr(pointer.?) - MAX_ALIGN);
+    const total_len = std.mem.readInt(usize, len_ptr[0..@sizeOf(usize)], .little) + MAX_ALIGN;
+
+    globals.trace("Freeing {} bytes at 0x{X}", @src(), .{ total_len - MAX_ALIGN, @intFromPtr(pointer) });
+
+    globals.allocator.free(len_ptr[0..total_len]);
+}
+
+pub export fn realloc(pointer: ?*anyopaque, memory_size: usize) ?*anyopaque {
+    if (pointer == null) return null;
+
+    const len_ptr: [*]align(MAX_ALIGN) u8 = @ptrFromInt(@intFromPtr(pointer.?) - MAX_ALIGN);
+    const total_len = std.mem.readInt(usize, len_ptr[0..@sizeOf(usize)], .little) + MAX_ALIGN;
+
+    globals.trace("Reallocating {}->{} bytes at 0x{X}", @src(), .{ total_len - MAX_ALIGN, memory_size, @intFromPtr(pointer) });
+
+    const ptr = globals.allocator.realloc(len_ptr[0..total_len], memory_size + MAX_ALIGN) catch return null;
+
+    std.mem.writeInt(usize, ptr[0..@sizeOf(usize)], memory_size, .little);
+
+    return ptr.ptr + MAX_ALIGN;
+}
+
 pub export fn abort() callconv(.c) noreturn {
     globals.trace("aborting program", @src(), .{});
     @panic("Program aborted");

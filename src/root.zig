@@ -13,31 +13,34 @@ export fn __main() callconv(.c) void {
 }
 
 pub fn main() !void {
-    globals.trace("Reaching entrypoint", @src(), .{});
+    var ret: c_int = 0;
+    {
+        globals.trace("Reaching entrypoint", @src(), .{});
 
-    defer {
-        const check = globals.gpa.deinit();
-        if (check != .ok) {
-            globals.trace("A leak was detected for the debug allocator", @src(), .{});
+        defer {
+            const check = globals.gpa.deinit();
+            if (check != .ok) {
+                globals.trace("A leak was detected for the debug allocator", @src(), .{});
+            }
         }
-    }
 
-    stdlib.ENV_MAP = try loadENV();
-    defer {
-        var it = stdlib.ENV_MAP.iterator();
+        stdlib.ENV_MAP = try loadENV();
+        defer {
+            var it = stdlib.ENV_MAP.iterator();
 
-        while (it.next()) |kv| {
-            globals.allocator.free(std.mem.span(kv.value_ptr.*));
+            while (it.next()) |kv| {
+                globals.allocator.free(std.mem.span(kv.value_ptr.*));
+            }
+            stdlib.ENV_MAP.deinit();
         }
-        stdlib.ENV_MAP.deinit();
+
+        const args = try argsAlloc();
+        defer globals.allocator.free(args);
+
+        ret = c.main(@intCast(args.len), args.ptr);
+
+        globals.trace("Main function exited with {}", @src(), .{ret});
     }
-
-    const args = try argsAlloc();
-    defer globals.allocator.free(args);
-
-    const ret = c.main(@intCast(args.len), args.ptr);
-
-    globals.trace("Main function exited with {}", @src(), .{ret});
 
     stdlib.exit(ret);
 }
