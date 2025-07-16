@@ -215,6 +215,29 @@ comptime {
     @export(TypedDiv(c_longlong), .{ .name = "lldiv", .linkage = .strong });
 }
 
+pub export fn bsearch(searched_value: ?*anyopaque, array_ptr: ?*anyopaque, element_count: usize, element_size: usize, comparator: *const fn (?*anyopaque, ?*anyopaque) callconv(.c) c_int) callconv(.c) ?*anyopaque {
+    if (array_ptr == null)
+        return null;
+
+    var low: usize = 0;
+    var high: usize = element_count;
+
+    while (low < high) {
+        const mid = low + (high - low) / 2;
+        const ptr: ?*anyopaque = @ptrFromInt(@intFromPtr(array_ptr.?) + mid * element_size);
+        const comp = comparator(searched_value, ptr);
+
+        switch (comp) {
+            0 => return ptr,
+            1 => low = mid + 1,
+            -1 => high = mid,
+            else => return null,
+        }
+    }
+
+    return null;
+}
+
 // Seed the random engine with random numbers at runtime
 var RANDOM_ENGINE: std.Random.DefaultPrng = .init(0x00);
 
