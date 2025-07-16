@@ -178,3 +178,50 @@ pub export fn system(command: ?[*:0]u8) c_int {
     //     .Signal, .Stopped, .Unknown => |sig| @intCast(sig),
     // };
 }
+
+fn TypedAbs(comptime T: type) *const anyopaque {
+    return &(struct {
+        pub fn abs(val: T) callconv(.c) T {
+            return @intCast(@abs(val));
+        }
+    }.abs);
+}
+
+comptime {
+    @export(TypedAbs(c_int), .{ .name = "abs", .linkage = .strong });
+    @export(TypedAbs(c_long), .{ .name = "labs", .linkage = .strong });
+    @export(TypedAbs(c_longlong), .{ .name = "llabs", .linkage = .strong });
+}
+
+fn TypedDiv(comptime T: type) *const anyopaque {
+    const Return = packed struct {
+        quot: T,
+        rem: T,
+    };
+
+    return &(struct {
+        pub fn div(num: T, dividend: T) callconv(.c) Return {
+            return Return{
+                .quot = @divFloor(num, dividend),
+                .rem = @mod(num, dividend),
+            };
+        }
+    }.div);
+}
+
+comptime {
+    @export(TypedDiv(c_int), .{ .name = "div", .linkage = .strong });
+    @export(TypedDiv(c_long), .{ .name = "ldiv", .linkage = .strong });
+    @export(TypedDiv(c_longlong), .{ .name = "lldiv", .linkage = .strong });
+}
+
+// Seed the random engine with random numbers at runtime
+var RANDOM_ENGINE: std.Random.DefaultPrng = .init(0x00);
+
+pub export fn rand() callconv(.c) c_int {
+    return RANDOM_ENGINE.random().int(c_int);
+}
+
+pub export fn srand(seed: c_uint) callconv(.c) void {
+    RANDOM_ENGINE.seed(@intCast(seed));
+}
