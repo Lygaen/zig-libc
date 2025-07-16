@@ -57,6 +57,6 @@ void* bsearch(const void* searchedValue, const void* array_ptr,
 void qsort( void * array, size_t elementCount, size_t elementSize,
             int (*compareFunction)( const void*, const void* ) );
 
-#define RAND_MAX 2147483647
+#define RAND_MAX 2147483647 // TODO: use INT_MAX
 int rand();
 void srand( unsigned int seed );

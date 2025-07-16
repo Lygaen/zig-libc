@@ -25,6 +25,8 @@ pub fn build(b: *std.Build) void {
         .root_module = libc_mod,
         .linkage = .static,
     });
+    configureHeader(b, libc_out, target.result);
+
     b.installArtifact(libc_out);
     libc_out.installHeadersDirectory(b.path("include/"), "", .{});
 
@@ -32,6 +34,23 @@ pub fn build(b: *std.Build) void {
         std.log.err("An error happened while adding tests {}", .{err});
         b.default_step.dependOn(&b.addFail("Could not add tests !").step);
     };
+}
+
+fn configureHeader(b: *std.Build, lib: *std.Build.Step.Compile, target: std.Target) void {
+    const conf = b.addConfigHeader(.{
+        .style = .{ .autoconf_at = b.path("./include/stddef.h.in") },
+    }, .{
+        .PTR_TYPE = bitSizeToTargetCType(target.ptrBitWidth(), target),
+        .INT8 = bitSizeToTargetCType(8, target),
+        .INT16 = bitSizeToTargetCType(16, target),
+        .INT32 = bitSizeToTargetCType(32, target),
+        .INT64 = bitSizeToTargetCType(64, target),
+    });
+    b.getInstallStep().dependOn(conf.output_file.step);
+    lib.addConfigHeader(conf);
+
+    const install_file = b.addInstallHeaderFile(conf.getOutput(), "stddef.h");
+    lib.step.dependOn(&install_file.step);
 }
 
 fn addTests(b: *std.Build, lib: *std.Build.Step.Compile, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) !void {
@@ -70,4 +89,29 @@ fn addTests(b: *std.Build, lib: *std.Build.Step.Compile, target: std.Build.Resol
 
         test_step.dependOn(&run.step);
     }
+}
+
+fn bitSizeToTargetCType(size: u16, target: std.Target) ?[]const u8 {
+    const ctype: std.Target.CType = blk: {
+        inline for (@typeInfo(std.Target.CType).@"enum".fields) |field| {
+            const ctype = @field(std.Target.CType, field.name);
+            if (ctype == .double or ctype == .float or ctype == .longdouble)
+                continue;
+
+            const tsize = target.cTypeBitSize(ctype);
+
+            if (tsize == size)
+                break :blk ctype;
+        }
+        return null;
+    };
+
+    return switch (ctype) {
+        .char => "char",
+        .int, .uint => "int",
+        .long, .ulong => "long",
+        .longlong, .ulonglong => "long long",
+        .short, .ushort => "short",
+        else => null,
+    };
 }

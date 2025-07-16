@@ -1,0 +1,15 @@
+
+typedef signed @PTR_TYPE@ ptrdiff_t;
+typedef unsigned @PTR_TYPE@ size_t;
+typedef signed @PTR_TYPE@ ssize_t;
+
+#define NULL 0
+
+typedef signed @INT8@ int8_t;
+typedef unsigned @INT8@ uint8_t;
+typedef signed @INT16@ int16_t;
+typedef unsigned @INT16@ uint16_t;
+typedef signed @INT32@ int32_t;
+typedef unsigned @INT32@ uint32_t;
+typedef signed @INT64@ int64_t;
+typedef unsigned @INT64@ uint64_t;
