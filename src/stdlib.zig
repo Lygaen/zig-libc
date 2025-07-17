@@ -238,6 +238,40 @@ pub export fn bsearch(searched_value: ?*anyopaque, array_ptr: ?*anyopaque, eleme
     return null;
 }
 
+pub export fn qsort(array: ?*anyopaque, element_count: usize, element_size: usize, comparator: *const fn (?*anyopaque, ?*anyopaque) callconv(.c) c_int) callconv(.c) void {
+    if (array == null) return;
+
+    const temp = globals.allocator.alloc(u8, element_size) catch @panic("OOM");
+    defer globals.allocator.free(temp);
+
+    const Context = struct {
+        temp: []u8,
+        array: ?*anyopaque,
+        element_size: usize,
+        comparator: *const fn (?*anyopaque, ?*anyopaque) callconv(.c) c_int,
+
+        pub fn swap(ctx: @This(), a: usize, b: usize) void {
+            const aslice = @as([*]u8, @ptrFromInt(@intFromPtr(ctx.array.?) + ctx.element_size * a))[0..ctx.element_size];
+            const bslice = @as([*]u8, @ptrFromInt(@intFromPtr(ctx.array.?) + ctx.element_size * b))[0..ctx.element_size];
+
+            std.mem.copyForwards(u8, ctx.temp, aslice);
+            std.mem.copyForwards(u8, aslice, bslice);
+            std.mem.copyForwards(u8, bslice, ctx.temp);
+        }
+
+        pub fn lessThan(ctx: @This(), a: usize, b: usize) bool {
+            return ctx.comparator(@ptrFromInt(@intFromPtr(ctx.array.?) + ctx.element_size * a), @ptrFromInt(@intFromPtr(ctx.array.?) + ctx.element_size * b)) < 0;
+        }
+    };
+
+    std.sort.pdqContext(0, element_count, Context{
+        .temp = temp,
+        .array = array,
+        .comparator = comparator,
+        .element_size = element_size,
+    });
+}
+
 // Seed the random engine with random numbers at runtime
 var RANDOM_ENGINE: std.Random.DefaultPrng = .init(0x00);
 

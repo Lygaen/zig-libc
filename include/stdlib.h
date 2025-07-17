@@ -54,8 +54,8 @@ lldiv_t lldiv(long long dividend, long long divisor);
 void* bsearch(const void* searched_value, const void* array_ptr,
     size_t element_count, size_t element_size,
     int (*comparator_function)(const void *, const void *));
-void qsort( void * array, size_t elementCount, size_t elementSize,
-            int (*compareFunction)( const void*, const void* ) );
+void qsort(void * array, size_t element_count, size_t element_size,
+            int (*compare_function)(const void*, const void*));
 
 #define RAND_MAX 2147483647 // TODO: use INT_MAX
 int rand();
