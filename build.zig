@@ -41,6 +41,7 @@ fn configureHeader(b: *std.Build, lib: *std.Build.Step.Compile, target: std.Targ
         .style = .{ .autoconf_at = b.path("./include/stddef.h.in") },
     }, .{
         .PTR_TYPE = bitSizeToTargetCType(target.ptrBitWidth(), target),
+        .MAX_ALIGN_TYPE = maxAlignTargetCType(target),
         .INT8 = bitSizeToTargetCType(8, target),
         .INT16 = bitSizeToTargetCType(16, target),
         .INT32 = bitSizeToTargetCType(32, target),
@@ -113,5 +114,31 @@ fn bitSizeToTargetCType(size: u16, target: std.Target) ?[]const u8 {
         .longlong, .ulonglong => "long long",
         .short, .ushort => "short",
         else => null,
+    };
+}
+
+fn maxAlignTargetCType(target: std.Target) []const u8 {
+    const ctype: std.Target.CType = blk: {
+        var max: std.Target.CType = .char;
+        inline for (@typeInfo(std.Target.CType).@"enum".fields) |field| {
+            const ctype = @field(std.Target.CType, field.name);
+            if (ctype == .double or ctype == .float or ctype == .longdouble)
+                continue;
+
+            const talign = target.cTypeAlignment(ctype);
+
+            if (talign > target.cTypeAlignment(max))
+                max = ctype;
+        }
+        break :blk max;
+    };
+
+    return switch (ctype) {
+        .char => "char",
+        .int, .uint => "int",
+        .long, .ulong => "long",
+        .longlong, .ulonglong => "long long",
+        .short, .ushort => "short",
+        else => unreachable,
     };
 }

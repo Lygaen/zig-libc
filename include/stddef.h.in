@@ -1,9 +1,10 @@
 
 typedef signed @PTR_TYPE@ ptrdiff_t;
 typedef unsigned @PTR_TYPE@ size_t;
-typedef signed @PTR_TYPE@ ssize_t;
+typedef unsigned @MAX_ALIGN_TYPE@ max_align_t;
 
 #define NULL 0
+#define offsetof(type, member) __builtin_offsetof(type, member)
 
 typedef signed @INT8@ int8_t;
 typedef unsigned @INT8@ uint8_t;
