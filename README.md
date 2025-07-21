@@ -18,6 +18,59 @@ If the behavior is different from `musl`/`glibc`/... then it is a **bug**. It ai
 
 It also has a **tracing** feature to allow you to follow your libc calls.
 
+## Progress
+Here is the current progress on the implementation of the different headers.
+
+### C 89/90
+See [headers iso](https://port70.net/%7Ensz/c/c89/c89-draft.html#4.).
+ - [x] `assert.h`
+ - [ ] `ctype.h`
+ - [ ] `errno.h`
+ - [ ] `float.h`
+ - [ ] `limits.h`
+ - [ ] `locale.h`
+ - [ ] `math.h`
+ - [ ] `setjmp.h`
+ - [ ] `signal.h`
+ - [ ] `stdarg.h`
+ - [ ] `stddef.h`
+ - [ ] `stdio.h`
+ - [ ] `stdlib.h`
+ - [ ] `string.h`
+ - [ ] `time.h`
+
+### C95 - CANNOT FIND ISO
+Because I cannot find the `C95` iso file for free online, I will not implement the following headers until it changes.
+ - [ ] `iso646.h`
+ - [ ] `wchar.h`
+ - [ ] `wctype.h`
+
+### C99
+See [headers iso](https://port70.net/%7Ensz/c/c99/n1256.html#7).
+ - [ ] `complex.h`
+ - [ ] `fenv.h`
+ - [ ] `inttypes.h`
+ - [ ] `stdbool.h` (deprecated C23, to be removed ?)
+ - [ ] `stdint.h`
+ - [ ] `tgmath.h`
+
+### C11
+See [headers iso](https://port70.net/%7Ensz/c/c11/n1570.html#7).
+ - [ ] `stdalign.h` (deprecated C23, to be removed ?)
+ - [ ] `stdatomic.h`
+ - [ ] `stdnoreturn.h`
+ - [ ] `threads.h`
+ - [ ] `uchar.h`
+
+### C23
+See [headers iso p.191](https://port70.net/%7Ensz/c/c23/n3220.pdf).
+ - [ ] `stdbit.h`
+ - [ ] `stdckdint.h`
+
+### C29 - CANNOT FIND ISO
+Same as for `C95`, cannot find a free iso online. Will not implement.
+ - [ ] `stdmchar.h`
+
 ## Usage / Build
 Exemple usage can be found in the `tests/` directory in the form of `*.c` files. Basically, use it like libc :D
 
@@ -71,6 +124,7 @@ This will clutter quite a lot your terminal but hopefully will help you trace ba
 ## Why ?
 There a multiple reasons why I wanted to create this project :
   - The zig ecosystem still has a strong dependency on libc, which needs to then be distributed on all machines
+  - Zig allows to generate information about the target machine ! It will allow to then have a cross-platform implementation of LIBC
   - It is a great project to learn various things
   - The current "ziglibc" project is dead (last commit >2y ago) and has many drawbacks and bad tooling
   - I feel like I can improve on the current solutions, and I want to try make an impact / help the zig ecosystem !

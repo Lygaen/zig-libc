@@ -37,20 +37,28 @@ pub fn build(b: *std.Build) void {
 }
 
 fn configureHeader(b: *std.Build, lib: *std.Build.Step.Compile, target: std.Target) void {
-    const conf = b.addConfigHeader(.{
-        .style = .{ .autoconf_at = b.path("./include/stddef.h.in") },
-    }, .{
+    const values = .{
         .PTR_TYPE = bitSizeToTargetCType(target.ptrBitWidth(), target),
         .MAX_ALIGN_TYPE = maxAlignTargetCType(target),
         .INT8 = bitSizeToTargetCType(8, target),
         .INT16 = bitSizeToTargetCType(16, target),
         .INT32 = bitSizeToTargetCType(32, target),
         .INT64 = bitSizeToTargetCType(64, target),
-    });
+    };
+
+    produceConfigHeader(b, values, lib, "stddef.h.in");
+}
+
+fn produceConfigHeader(b: *std.Build, values: anytype, lib: *std.Build.Step.Compile, path: []const u8) void {
+    const conf = b.addConfigHeader(.{
+        .style = .{ .autoconf_at = b.path(b.pathJoin(&.{ "./include/", path })) },
+    }, values);
     b.getInstallStep().dependOn(conf.output_file.step);
     lib.addConfigHeader(conf);
 
-    const install_file = b.addInstallHeaderFile(conf.getOutput(), "stddef.h");
+    const basename = std.fs.path.stem(path);
+
+    const install_file = b.addInstallHeaderFile(conf.getOutput(), basename);
     lib.step.dependOn(&install_file.step);
 }
 
