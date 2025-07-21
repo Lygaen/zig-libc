@@ -54,7 +54,7 @@ See [headers iso](https://port70.net/%7Ensz/c/c89/c89-draft.html#4.).
  - [ ] `math.h`
  - [ ] `setjmp.h`
  - [ ] `signal.h`
- - [ ] `stdarg.h`
+ - [x] `stdarg.h`
  - [ ] `stddef.h`
  - [ ] `stdio.h`
  - [ ] `stdlib.h`
