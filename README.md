@@ -18,6 +18,28 @@ If the behavior is different from `musl`/`glibc`/... then it is a **bug**. It ai
 
 It also has a **tracing** feature to allow you to follow your libc calls.
 
+## Summary
+<!--ts-->
+  * [Progress](#progress)
+    * [C 89/90](#c-8990)
+    * [C95 - CANNOT FIND ISO](#c95---cannot-find-iso)
+    * [C99](#c99)
+    * [C11](#c11)
+    * [C23](#c23)
+    * [C29 - CANNOT FIND ISO](#c29---cannot-find-iso)
+  * [Usage / Build](#usage--build)
+    * [Build](#build)
+    * [Tests](#tests)
+    * [Configuration](#configuration)
+      * [Tracing](#tracing)
+  * [Why ?](#why-)
+  * [Acknowledgements](#acknowledgements)
+
+<!-- Created by https://github.com/ekalinin/github-markdown-toc -->
+<!-- Added by: mat, at: Mon Jul 21 12:34:12 PM CEST 2025 -->
+
+<!--te-->
+
 ## Progress
 Here is the current progress on the implementation of the different headers.
 
