@@ -40,10 +40,11 @@ fn configureHeader(b: *std.Build, lib: *std.Build.Step.Compile, target: std.Targ
     const values = .{
         .PTR_TYPE = bitSizeToTargetCType(target.ptrBitWidth(), target),
         .MAX_ALIGN_TYPE = maxAlignTargetCType(target),
-        .INT8 = bitSizeToTargetCType(8, target),
-        .INT16 = bitSizeToTargetCType(16, target),
-        .INT32 = bitSizeToTargetCType(32, target),
-        .INT64 = bitSizeToTargetCType(64, target),
+        .WCHAR_TYPE = getWChar(target),
+        // .INT8 = bitSizeToTargetCType(8, target),
+        // .INT16 = bitSizeToTargetCType(16, target),
+        // .INT32 = bitSizeToTargetCType(32, target),
+        // .INT64 = bitSizeToTargetCType(64, target),
     };
 
     produceConfigHeader(b, values, lib, "stddef.h.in");
@@ -98,6 +99,15 @@ fn addTests(b: *std.Build, lib: *std.Build.Step.Compile, target: std.Build.Resol
 
         test_step.dependOn(&run.step);
     }
+}
+
+fn getWChar(target: std.Target) []const u8 {
+    const size: u8 = switch (target.os.tag) {
+        .windows => 2,
+        else => 4,
+    };
+
+    return bitSizeToTargetCType(8 * size, target) orelse unreachable;
 }
 
 fn bitSizeToTargetCType(size: u16, target: std.Target) ?[]const u8 {

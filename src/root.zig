@@ -71,3 +71,8 @@ fn argsAlloc() ![:null]?[*:0]u8 {
     }
     return try argv.toOwnedSliceSentinel(globals.allocator, null);
 }
+
+comptime {
+    _ = stdlib;
+    _ = @import("ctype.zig");
+}

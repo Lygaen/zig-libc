@@ -46,7 +46,7 @@ Here is the current progress on the implementation of the different headers.
 ### C 89/90
 See [headers iso](https://port70.net/%7Ensz/c/c89/c89-draft.html#4.).
  - [x] `assert.h`
- - [ ] `ctype.h`
+ - [x] `ctype.h`
  - [ ] `errno.h`
  - [ ] `float.h`
  - [ ] `limits.h`
@@ -55,7 +55,7 @@ See [headers iso](https://port70.net/%7Ensz/c/c89/c89-draft.html#4.).
  - [ ] `setjmp.h`
  - [ ] `signal.h`
  - [x] `stdarg.h`
- - [ ] `stddef.h`
+ - [x] `stddef.h`
  - [ ] `stdio.h`
  - [ ] `stdlib.h`
  - [ ] `string.h`

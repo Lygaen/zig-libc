@@ -2,15 +2,7 @@
 typedef signed @PTR_TYPE@ ptrdiff_t;
 typedef unsigned @PTR_TYPE@ size_t;
 typedef unsigned @MAX_ALIGN_TYPE@ max_align_t;
+typedef @WCHAR_TYPE@ wchar_t;
 
 #define NULL 0
 #define offsetof(type, member) __builtin_offsetof(type, member)
-
-typedef signed @INT8@ int8_t;
-typedef unsigned @INT8@ uint8_t;
-typedef signed @INT16@ int16_t;
-typedef unsigned @INT16@ uint16_t;
-typedef signed @INT32@ int32_t;
-typedef unsigned @INT32@ uint32_t;
-typedef signed @INT64@ int64_t;
-typedef unsigned @INT64@ uint64_t;

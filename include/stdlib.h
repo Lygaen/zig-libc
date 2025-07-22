@@ -3,6 +3,17 @@
 #define EXIT_SUCCESS 0
 #define EXIT_FAILURE 1
 
+// String conversion functions
+double strtod(const char *ptr, char **endptr);
+double atof(const char* ptr);
+
+long int strtol(const char *ptr, char **endptr, int base);
+int atoi(const char* ptr);
+long atol(const char* ptr);
+
+unsigned long int strtoul(const char *ptr, char **endptr,
+                  int base);
+
 // Allocation strategies
 void *aligned_alloc(size_t alignement, size_t memory_size);
 void *calloc(size_t element_count, size_t element_size);
@@ -16,9 +27,6 @@ void abort();
 
 int atexit(void (*callback) (void));
 void exit(int exit_code);
-
-int at_quick_exit(void (*callback) (void));
-void quick_exit(int exit_code);
 
 void _Exit(int exit_code);
 // ---
