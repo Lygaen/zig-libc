@@ -47,9 +47,9 @@ Here is the current progress on the implementation of the different headers.
 See [headers iso](https://port70.net/%7Ensz/c/c89/c89-draft.html#4.).
  - [x] `assert.h`
  - [x] `ctype.h`
- - [ ] `errno.h`
- - [ ] `float.h`
- - [ ] `limits.h`
+ - [x] `errno.h`
+ - [x] `float.h`
+ - [x] `limits.h`
  - [ ] `locale.h`
  - [ ] `math.h`
  - [ ] `setjmp.h`

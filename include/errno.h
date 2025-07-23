@@ -1,5 +1,4 @@
-#define EDOM   /* implementation-defined */
-#define EILSEQ /* implementation-defined */
-#define ERANGE /* implementation-defined */
+#define EDOM 33
+#define ERANGE 34
 
-#define errno  /* implementation-defined */
+extern int errno;
