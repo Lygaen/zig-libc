@@ -56,11 +56,7 @@ fn produceConfigHeader(b: *std.Build, values: anytype, lib: *std.Build.Step.Comp
     }, values);
     b.getInstallStep().dependOn(conf.output_file.step);
     lib.addConfigHeader(conf);
-
-    const basename = std.fs.path.stem(path);
-
-    const install_file = b.addInstallHeaderFile(conf.getOutput(), basename);
-    lib.step.dependOn(&install_file.step);
+    lib.installConfigHeader(conf);
 }
 
 fn addTests(b: *std.Build, lib: *std.Build.Step.Compile, target: std.Build.ResolvedTarget, optimize: std.builtin.OptimizeMode) !void {

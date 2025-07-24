@@ -50,7 +50,7 @@ See [headers iso](https://port70.net/%7Ensz/c/c89/c89-draft.html#4.).
  - [x] `errno.h`
  - [x] `float.h`
  - [x] `limits.h`
- - [ ] `locale.h`
+ - [x] `locale.h`
  - [ ] `math.h`
  - [ ] `setjmp.h`
  - [ ] `signal.h`
