@@ -73,7 +73,8 @@ fn argsAlloc() ![:null]?[*:0]u8 {
 }
 
 comptime {
-    _ = stdlib;
     _ = @import("ctype.zig");
     _ = @import("errno.zig");
+    _ = @import("locale.zig");
+    _ = stdlib;
 }

@@ -13,6 +13,7 @@ pub fn build(b: *std.Build) void {
         .target = target,
         .optimize = optimize,
     });
+    libc_mod.addIncludePath(b.path("include/"));
     libc_mod.addOptions("options", options);
 
     if (target.result.os.tag == .windows) {

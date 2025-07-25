@@ -6,7 +6,7 @@ const c = @cImport({
 });
 
 const DEFAULT_C_LOCALE: c.lconv = .{
-    .decimal_point = ".",
+    .decimal_point = @constCast("."),
     .int_frac_digits = c.CHAR_MAX,
     .frac_digits = c.CHAR_MAX,
     .p_cs_precedes = c.CHAR_MAX,
@@ -27,4 +27,5 @@ pub export fn setlocale(category: c_int, locale: [*c]const u8) callconv(.c) [*c]
     _ = category;
     _ = locale;
     globals.trace("STUB - setlocale not implemented", @src(), .{});
+    return null;
 }
