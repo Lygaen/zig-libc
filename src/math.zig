@@ -12,13 +12,15 @@
 //! a double value. If the result overflows (the magnitude of the result is so large that
 //! it cannot be represented in an object of the specified type), the function returns the
 //! value of the macro HUGE_VAL, with the same sign as the correct value of the function;
-//!  the value of the macro ERANGE is stored in errno. If the result underflows (the
+//! the value of the macro ERANGE is stored in errno. If the result underflows (the
 //! magnitude of the result is so small that it cannot be represented in an object of the
-//!  specified type), the function returns zero; whether the integer expression errno acquires
-//!  the value of the macro ERANGE is implementation-defined.
+//! specified type), the function returns zero; whether the integer expression errno acquires
+//! the value of the macro ERANGE is implementation-defined.
 
 const std = @import("std");
 const math = std.math;
+
+const errno = @import("errno.zig");
 
 /// Macro which expands to a positive double expression,
 /// not necessarily representable as a float.
@@ -31,8 +33,10 @@ pub export const HUGE_VAL = 1e5000;
 pub export fn acos(x: f64) callconv(.c) f64 {
     const res = math.acos(x);
 
-    if (math.isNan(res)) // TODO: errno set to ERANGE
+    if (math.isNan(res)) {
+        errno.errno = errno.EDOM;
         return HUGE_VAL;
+    }
 
     return res;
 }
@@ -44,8 +48,10 @@ pub export fn acos(x: f64) callconv(.c) f64 {
 pub export fn asin(x: f64) callconv(.c) f64 {
     const res = math.asin(x);
 
-    if (math.isNan(res)) // TODO: errno set to ERANGE
+    if (math.isNan(res)) {
+        errno.errno = errno.EDOM;
         return HUGE_VAL;
+    }
 
     return res;
 }
@@ -63,8 +69,10 @@ pub export fn atan(x: f64) callconv(.c) f64 {
 pub export fn atan2(y: f64, x: f64) callconv(.c) f64 {
     const res = math.atan2(y, x);
 
-    if (math.isNan(res)) // TODO: errno set to ERANGE
+    if (math.isNan(res)) {
+        errno.errno = errno.EDOM;
         return HUGE_VAL;
+    }
 
     return res;
 }
@@ -96,8 +104,15 @@ pub export fn tan(x: f64) callconv(.c) f64 {
 pub export fn cosh(x: f64) callconv(.c) f64 {
     const res = math.cosh(x);
 
-    if (math.isNan(res) or math.isInf(res)) // TODO: errno set to ERANGE
+    if (math.isNan(res)) {
+        errno.errno = errno.EDOM;
         return HUGE_VAL;
+    }
+
+    if (math.isInf(res)) {
+        errno.errno = errno.ERANGE;
+        return HUGE_VAL;
+    }
 
     return res;
 }
@@ -108,8 +123,15 @@ pub export fn cosh(x: f64) callconv(.c) f64 {
 pub export fn sinh(x: f64) callconv(.c) f64 {
     const res = math.sinh(x);
 
-    if (math.isNan(res) or math.isInf(res)) // TODO: errno set to ERANGE
+    if (math.isNan(res)) {
+        errno.errno = errno.EDOM;
         return HUGE_VAL;
+    }
+
+    if (math.isInf(res)) {
+        errno.errno = errno.ERANGE;
+        return HUGE_VAL;
+    }
 
     return res;
 }
@@ -119,8 +141,15 @@ pub export fn sinh(x: f64) callconv(.c) f64 {
 pub export fn tanh(x: f64) callconv(.c) f64 {
     const res = math.tanh(x);
 
-    if (math.isNan(res)) // TODO: errno set to ERANGE
+    if (math.isNan(res)) {
+        errno.errno = errno.EDOM;
         return HUGE_VAL;
+    }
+
+    if (math.isInf(res)) {
+        errno.errno = errno.ERANGE;
+        return HUGE_VAL;
+    }
 
     return res;
 }
@@ -131,8 +160,15 @@ pub export fn tanh(x: f64) callconv(.c) f64 {
 pub export fn exp(x: f64) callconv(.c) f64 {
     const res = math.exp(x);
 
-    if (math.isInf(res)) // TODO: errno set to ERANGE
+    if (math.isNan(res)) {
+        errno.errno = errno.EDOM;
         return HUGE_VAL;
+    }
+
+    if (math.isInf(res)) {
+        errno.errno = errno.ERANGE;
+        return HUGE_VAL;
+    }
 
     return res;
 }
@@ -145,6 +181,17 @@ pub export fn exp(x: f64) callconv(.c) f64 {
 /// If value is zero, both parts of the result are zero.
 pub export fn frexp(value: f64, exponent: [*c]c_int) callconv(.c) f64 {
     const res = math.frexp(value);
+
+    if (math.isNan(res.significand)) {
+        errno.errno = errno.EDOM;
+        return HUGE_VAL;
+    }
+
+    if (math.isInf(res.significand)) {
+        errno.errno = errno.ERANGE;
+        return HUGE_VAL;
+    }
+
     exponent.* = res.exponent;
     return res.significand;
 }
@@ -155,8 +202,10 @@ pub export fn frexp(value: f64, exponent: [*c]c_int) callconv(.c) f64 {
 pub export fn ldexp(x: f64, exponent: c_int) callconv(.c) f64 {
     const res = math.ldexp(x, exponent);
 
-    if (math.isInf(res)) // TODO: errno set to ERANGE
+    if (math.isInf(res.significand)) {
+        errno.errno = errno.ERANGE;
         return HUGE_VAL;
+    }
 
     return res;
 }
@@ -183,8 +232,15 @@ pub export fn log(x: f64) callconv(.c) f64 {
 pub export fn log10(x: f64) callconv(.c) f64 {
     const res = @log10(x);
 
-    if (math.isNan(res) or math.isInf(res)) // TODO: errno set to ERANGE
+    if (math.isNan(res.significand)) {
+        errno.errno = errno.EDOM;
         return HUGE_VAL;
+    }
+
+    if (math.isInf(res.significand)) {
+        errno.errno = errno.ERANGE;
+        return HUGE_VAL;
+    }
 
     return res;
 }
@@ -195,6 +251,17 @@ pub export fn log10(x: f64) callconv(.c) f64 {
 /// The modf function returns the signed fractional part of value.
 pub export fn modf(value: f64, ipart: [*c]c_int) callconv(.c) f64 {
     const res = math.modf(value);
+
+    if (math.isNan(res.fpart)) {
+        errno.errno = errno.EDOM;
+        return HUGE_VAL;
+    }
+
+    if (math.isInf(res.fpart)) {
+        errno.errno = errno.ERANGE;
+        return HUGE_VAL;
+    }
+
     ipart.* = res.ipart;
     return res.fpart;
 }
@@ -207,8 +274,15 @@ pub export fn modf(value: f64, ipart: [*c]c_int) callconv(.c) f64 {
 pub export fn pow(x: f64, y: f64) callconv(.c) f64 {
     const res = math.pow(f64, x, y);
 
-    if (math.isNan(res) or math.isInf(res)) // TODO: errno set to ERANGE
+    if (math.isNan(res)) {
+        errno.errno = errno.EDOM;
         return HUGE_VAL;
+    }
+
+    if (math.isInf(res)) {
+        errno.errno = errno.ERANGE;
+        return HUGE_VAL;
+    }
 
     return res;
 }
@@ -219,8 +293,15 @@ pub export fn pow(x: f64, y: f64) callconv(.c) f64 {
 pub export fn sqrt(x: f64) callconv(.c) f64 {
     const res = math.sqrt(x);
 
-    if (math.isNan(res) or math.isInf(res)) // TODO: errno set to ERANGE
+    if (math.isNan(res.fpart)) {
+        errno.errno = errno.EDOM;
         return HUGE_VAL;
+    }
+
+    if (math.isInf(res.fpart)) {
+        errno.errno = errno.ERANGE;
+        return HUGE_VAL;
+    }
 
     return res;
 }
