@@ -32,7 +32,7 @@ pub fn build(b: *std.Build) void {
     }
 
     { // Header generation
-        emit_headers.generateHeaders(b) catch |err| {
+        emit_headers.generateHeaders(b, libc_lib) catch |err| {
             const msg = std.fmt.allocPrint(b.allocator, "Generate headers failed with {}", .{err}) catch unreachable;
             defer b.allocator.free(msg);
             b.default_step.dependOn(&b.addFail(msg).step);

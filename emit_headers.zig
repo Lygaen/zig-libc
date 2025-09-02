@@ -1,6 +1,8 @@
 const std = @import("std");
 const Ast = std.zig.Ast;
 
+var target: std.Target = undefined;
+
 pub const Export = struct {
     value: union(enum) {
         container_comment: void,
@@ -81,14 +83,26 @@ pub const Export = struct {
                 std.debug.print("Constant {s} does not define a value\n", .{name});
                 return null;
             };
-            const init_slice = ast.tokenSlice(ast.firstToken(init_index));
+            var init_slice = ast.getNodeSource(init_index);
+
+            const MACRO_EXPANSION = "Macro: ";
+            var doc_comment = comment;
+            if (std.mem.lastIndexOf(u8, comment, MACRO_EXPANSION)) |i| {
+                init_slice = try expandSpecialMacro(allocator, comment[i + MACRO_EXPANSION.len ..]);
+                doc_comment = doc_comment[0..i];
+                if (i != 0) {
+                    doc_comment = doc_comment[0 .. i - 1];
+                }
+            } else {
+                init_slice = try allocator.dupe(u8, init_slice);
+            }
 
             return .{
-                .comment = comment,
+                .comment = doc_comment,
                 .value = .{
                     .constant = .{
                         .name = try allocator.dupe(u8, name),
-                        .value = try allocator.dupe(u8, init_slice),
+                        .value = init_slice,
                     },
                 },
             };
@@ -134,7 +148,114 @@ pub const Export = struct {
 
 pub const ExportsMap = std.json.ArrayHashMap([]Export);
 
-pub fn generateHeaders(b: *std.Build) !void {
+fn computeMinMaxCType(c_type: std.Target.CType, is_min: bool) isize {
+    const is_signed = blk: {
+        if (c_type == .char) {
+            break :blk target.cCharSignedness() == .signed;
+        }
+        const signed_types = [_]std.Target.CType{
+            .short, .int, .long, .longlong,
+        };
+        break :blk std.mem.containsAtLeast(
+            std.Target.CType,
+            &signed_types,
+            1,
+            &.{c_type},
+        );
+    };
+
+    const size = target.cTypeBitSize(c_type);
+    if (is_signed) {
+        var max = std.math.powi(isize, 2, size - 1) catch @panic("Too big type");
+        max -= 1;
+        if (is_min)
+            return (-1 - max);
+        return max;
+    } else {
+        if (is_min)
+            return 0;
+        return std.math.pow(isize, 2, size) - 1;
+    }
+}
+
+fn expandSpecialMacro(allocator: std.mem.Allocator, macro: []const u8) ![]const u8 {
+    const MacroEvals = enum {
+        __CHAR_MIN__,
+        __CHAR_MAX__,
+        __CHAR_BIT__,
+        __SCHAR_MAX__,
+        __SHRT_MAX__,
+        __INT_MAX__,
+        __LONG_MAX__,
+    };
+
+    const eval = std.meta.stringToEnum(MacroEvals, macro);
+    if (eval == null) {
+        return try allocator.dupe(u8, macro);
+    }
+
+    return switch (eval.?) {
+        .__CHAR_MIN__ => try std.fmt.allocPrint(
+            allocator,
+            "0x{X}",
+            .{computeMinMaxCType(
+                .char,
+                true,
+            )},
+        ),
+        .__CHAR_MAX__ => try std.fmt.allocPrint(
+            allocator,
+            "0x{X}",
+            .{
+                computeMinMaxCType(
+                    .char,
+                    false,
+                ),
+            },
+        ),
+        .__CHAR_BIT__ => try std.fmt.allocPrint(
+            allocator,
+            "0x{}",
+            .{target.cTypeBitSize(.char)},
+        ),
+        .__SCHAR_MAX__ => try std.fmt.allocPrint(
+            allocator,
+            "0x{X}",
+            .{computeMinMaxCType(
+                .char,
+                false,
+            )},
+        ),
+        .__SHRT_MAX__ => try std.fmt.allocPrint(
+            allocator,
+            "0x{X}",
+            .{computeMinMaxCType(
+                .short,
+                false,
+            )},
+        ),
+        .__INT_MAX__ => try std.fmt.allocPrint(
+            allocator,
+            "0x{X}",
+            .{computeMinMaxCType(
+                .int,
+                false,
+            )},
+        ),
+        .__LONG_MAX__ => try std.fmt.allocPrint(
+            allocator,
+            "0x{X}",
+            .{computeMinMaxCType(
+                .int,
+                false,
+            )},
+        ),
+    };
+}
+
+pub fn generateHeaders(b: *std.Build, lib: *std.Build.Step.Compile) !void {
+    target = lib.rootModuleTarget();
+
     var exports_map: ExportsMap = .{
         .map = try .init(b.allocator, &.{}, &.{}),
     };
@@ -235,7 +356,7 @@ pub fn generateCHeaderFile(allocator: std.mem.Allocator, name: []const u8, expor
         if (exp.value == .container_comment)
             continue;
 
-        try writer.print("\n", .{});
+        //try writer.print("\n", .{});
 
         if (exp.comment.len != 0) {
             var split = std.mem.splitScalar(u8, exp.comment, '\n');
@@ -259,7 +380,7 @@ pub fn generateCHeaderFile(allocator: std.mem.Allocator, name: []const u8, expor
         try writer.print("\n", .{});
     }
 
-    try writer.print("#endif // __{s}_H__\n", .{name_upper});
+    try writer.print("#endif // __{s}_H__", .{name_upper});
     try writer.flush();
 
     return try allocating.toOwnedSlice();
