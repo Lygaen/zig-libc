@@ -20,16 +20,31 @@ pub fn build(b: *std.Build) void {
     });
     b.installArtifact(libc_lib);
 
-    emit_headers.generateHeaders(b) catch |err| {
-        const msg = std.fmt.allocPrint(b.allocator, "Generate headers failed with {}", .{err}) catch unreachable;
-        defer b.allocator.free(msg);
-        b.default_step.dependOn(&b.addFail(msg).step);
-    };
+    { // Docs step
+        const install_docs = b.addInstallDirectory(.{
+            .source_dir = libc_lib.getEmittedDocs(),
+            .install_dir = .prefix,
+            .install_subdir = "docs",
+        });
 
-    const libc_check = b.addLibrary(.{
-        .name = "zig-libc-check",
-        .root_module = libc_mod,
-    });
-    const check = b.step("check", "Check if libc compiles");
-    check.dependOn(&libc_check.step);
+        const docs_step = b.step("docs", "Install docs into $PREFIX/docs");
+        docs_step.dependOn(&install_docs.step);
+    }
+
+    { // Header generation
+        emit_headers.generateHeaders(b) catch |err| {
+            const msg = std.fmt.allocPrint(b.allocator, "Generate headers failed with {}", .{err}) catch unreachable;
+            defer b.allocator.free(msg);
+            b.default_step.dependOn(&b.addFail(msg).step);
+        };
+    }
+
+    { // Check step
+        const libc_check = b.addLibrary(.{
+            .name = "zig-libc-check",
+            .root_module = libc_mod,
+        });
+        const check = b.step("check", "Check if libc compiles");
+        check.dependOn(&libc_check.step);
+    }
 }
