@@ -69,4 +69,4 @@ pub export const ULONG_MAX = (LONG_MAX * 2 + 1);
 
 /// maximum number of bytes in a multibyte character,
 /// for any supported locale
-pub export const MB_LEN_MAX = @compileLog("UNDEF");
+pub export const MB_LEN_MAX = 4;

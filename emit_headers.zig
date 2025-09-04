@@ -66,7 +66,11 @@ pub const Export = struct {
     pub fn fromVariableProto(allocator: std.mem.Allocator, comment: []const u8, var_proto: Ast.full.VarDecl, ast: *const Ast) !?Export {
         const is_pub = var_proto.visib_token != null;
         const is_export = var_proto.extern_export_token != null;
-        const name = ast.tokenSlice(var_proto.ast.mut_token + 1);
+        var name = ast.tokenSlice(var_proto.ast.mut_token + 1);
+
+        if (std.mem.startsWith(u8, name, "@\"")) {
+            name = name[2 .. name.len - 1];
+        }
 
         if (!is_pub)
             return null;
@@ -187,6 +191,7 @@ fn expandSpecialMacro(allocator: std.mem.Allocator, macro: []const u8) ![]const 
         __SHRT_MAX__,
         __INT_MAX__,
         __LONG_MAX__,
+        __PTR_TYPE__,
     };
 
     const eval = std.meta.stringToEnum(MacroEvals, macro);
@@ -197,7 +202,7 @@ fn expandSpecialMacro(allocator: std.mem.Allocator, macro: []const u8) ![]const 
     return switch (eval.?) {
         .__CHAR_MIN__ => try std.fmt.allocPrint(
             allocator,
-            "0x{X}",
+            "{}",
             .{computeMinMaxCType(
                 .char,
                 true,
@@ -205,7 +210,7 @@ fn expandSpecialMacro(allocator: std.mem.Allocator, macro: []const u8) ![]const 
         ),
         .__CHAR_MAX__ => try std.fmt.allocPrint(
             allocator,
-            "0x{X}",
+            "{}",
             .{
                 computeMinMaxCType(
                     .char,
@@ -215,12 +220,12 @@ fn expandSpecialMacro(allocator: std.mem.Allocator, macro: []const u8) ![]const 
         ),
         .__CHAR_BIT__ => try std.fmt.allocPrint(
             allocator,
-            "0x{}",
+            "{}",
             .{target.cTypeBitSize(.char)},
         ),
         .__SCHAR_MAX__ => try std.fmt.allocPrint(
             allocator,
-            "0x{X}",
+            "{}",
             .{computeMinMaxCType(
                 .char,
                 false,
@@ -228,7 +233,7 @@ fn expandSpecialMacro(allocator: std.mem.Allocator, macro: []const u8) ![]const 
         ),
         .__SHRT_MAX__ => try std.fmt.allocPrint(
             allocator,
-            "0x{X}",
+            "{}",
             .{computeMinMaxCType(
                 .short,
                 false,
@@ -236,7 +241,7 @@ fn expandSpecialMacro(allocator: std.mem.Allocator, macro: []const u8) ![]const 
         ),
         .__INT_MAX__ => try std.fmt.allocPrint(
             allocator,
-            "0x{X}",
+            "{}",
             .{computeMinMaxCType(
                 .int,
                 false,
@@ -244,12 +249,28 @@ fn expandSpecialMacro(allocator: std.mem.Allocator, macro: []const u8) ![]const 
         ),
         .__LONG_MAX__ => try std.fmt.allocPrint(
             allocator,
-            "0x{X}",
+            "{}",
             .{computeMinMaxCType(
                 .int,
                 false,
             )},
         ),
+        .__PTR_TYPE__ => blk: {
+            const ptr_bit_size = target.ptrBitWidth();
+            const fields = @typeInfo(std.Target.CType).@"enum".fields;
+
+            inline for (fields) |efield| {
+                const ctype: std.Target.CType = @enumFromInt(efield.value);
+                if (ctype == .double or ctype == .float or ctype == .longdouble)
+                    continue;
+
+                if (ptr_bit_size == target.cTypeBitSize(ctype)) {
+                    break :blk try allocator.dupe(u8, efield.name);
+                }
+            }
+
+            return error.UnrepresentablePointer;
+        },
     };
 }
 
@@ -423,10 +444,11 @@ fn zigTypeToC(allocator: std.mem.Allocator, t: []const u8) ![]const u8 {
 }
 
 fn searchDocComment(ast: *const Ast, allocator: std.mem.Allocator, main_token: u32) ![]const u8 {
-    var t = main_token - 1;
+    var t = main_token;
     var buff: std.ArrayList(u8) = try .initCapacity(allocator, 0);
 
-    while (t > 0) : (t -= 1) {
+    while (t > 0) {
+        t -= 1;
         switch (ast.tokens.items(.tag)[t]) {
             .doc_comment => {
                 const sl = ast.tokenSlice(t);
@@ -442,7 +464,7 @@ fn searchDocComment(ast: *const Ast, allocator: std.mem.Allocator, main_token: u
                 try buff.insertSlice(allocator, 0, doc);
                 continue;
             },
-            .keyword_pub => continue,
+            .keyword_pub, .keyword_export => continue,
             else => break,
         }
     }
@@ -451,10 +473,11 @@ fn searchDocComment(ast: *const Ast, allocator: std.mem.Allocator, main_token: u
 }
 
 fn searchContainerDocComment(ast: *const Ast, allocator: std.mem.Allocator, main_token: u32) ![]const u8 {
-    var t = main_token - 1;
+    var t = main_token;
     var buff: std.ArrayList(u8) = try .initCapacity(allocator, 0);
 
-    while (t > 0) : (t -= 1) {
+    while (t > 0) {
+        t -= 1;
         switch (ast.tokens.items(.tag)[t]) {
             .container_doc_comment => {
                 const sl = ast.tokenSlice(t);
