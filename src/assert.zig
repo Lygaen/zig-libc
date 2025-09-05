@@ -20,7 +20,7 @@ pub export fn __assert_impl(
     assert_str: [*c]c_char,
     file: [*c]c_char,
     line: c_int,
-) void {
+) callconv(.c) void {
     if (cond)
         return;
 

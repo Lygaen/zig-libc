@@ -18,7 +18,7 @@ const ascii = std.ascii;
 
 /// The isalnum function tests for any character
 /// for which isalpha or isdigit is true.
-pub export fn isalnum(c: c_int) c_int {
+pub export fn isalnum(c: c_int) callconv(.c) c_int {
     return @intFromBool(ascii.isAlphanumeric(c));
 }
 
@@ -29,22 +29,22 @@ pub export fn isalnum(c: c_int) c_int {
 /// or isspace is true. In the C locale, isalpha
 /// returns true only for the characters for which
 /// isupper or islower is true.
-pub export fn isalpha(c: c_int) c_int {
+pub export fn isalpha(c: c_int) callconv(.c) c_int {
     return @intFromBool(ascii.isAlphabetic(c));
 }
 
 /// The iscntrl function tests for any control character.
-pub export fn iscntrl(c: c_int) c_int {
+pub export fn iscntrl(c: c_int) callconv(.c) c_int {
     return @intFromBool(ascii.isControl(c));
 }
 
 /// The isdigit function tests for any decimal-digit character.
-pub export fn isdigit(c: c_int) c_int {
+pub export fn isdigit(c: c_int) callconv(.c) c_int {
     return @intFromBool(ascii.isDigit(c));
 }
 
 /// The isgraph function tests for any printing character except space (' ').
-pub export fn isgraph(c: c_int) c_int {
+pub export fn isgraph(c: c_int) callconv(.c) c_int {
     return @intFromBool((@as(c_uint, @bitCast(c)) -% '!') < '^');
 }
 
@@ -52,18 +52,18 @@ pub export fn isgraph(c: c_int) c_int {
 /// an implementation-defined set of characters for which none of iscntrl,
 /// isdigit, ispunct, or isspace is true. In the C locale, islower returns
 /// true only for the characters defined as lower-case letters.
-pub export fn islower(c: c_int) c_int {
+pub export fn islower(c: c_int) callconv(.c) c_int {
     return @intFromBool(ascii.isLower(c));
 }
 
 /// The isprint function tests for any printing character including space (' ').
-pub export fn isprint(c: c_int) c_int {
+pub export fn isprint(c: c_int) callconv(.c) c_int {
     return @intFromBool(ascii.isPrint(c));
 }
 
 /// The ispunct function tests for any printing character except space (' ')
 /// or a character for which isalnum is true.
-pub export fn ispunct(c: c_int) c_int {
+pub export fn ispunct(c: c_int) callconv(.c) c_int {
     return @intFromBool((isgraph(c) == 1) and (isalnum(c) == 0));
 }
 
@@ -74,7 +74,7 @@ pub export fn ispunct(c: c_int) c_int {
 /// return ('\r'), horizontal tab ('\t'), and vertical tab ('\v'). In
 /// the C locale, isspace returns true only for the standard white-space
 /// characters.
-pub export fn isspace(c: c_int) c_int {
+pub export fn isspace(c: c_int) callconv(.c) c_int {
     return @intFromBool(ascii.isWhitespace(c));
 }
 
@@ -82,12 +82,12 @@ pub export fn isspace(c: c_int) c_int {
 /// implementation-defined set of characters for which none of iscntrl,
 /// isdigit, ispunct, or isspace is true. In the C locale, isupper
 /// returns true only for the characters defined as upper-case letters.
-pub export fn isupper(c: c_int) c_int {
+pub export fn isupper(c: c_int) callconv(.c) c_int {
     return @intFromBool(ascii.isUpper(c));
 }
 
 /// The isxdigit function tests for any hexadecimal-digit character.
-pub export fn isxdigit(c: c_int) c_int {
+pub export fn isxdigit(c: c_int) callconv(.c) c_int {
     return @intFromBool(ascii.isHex(c));
 }
 
@@ -98,7 +98,7 @@ pub export fn isxdigit(c: c_int) c_int {
 /// otherwise the argument is returned unchanged. In the C locale,
 /// tolower maps only the characters for which isupper is true to
 /// the corresponding characters for which islower is true.
-pub export fn tolower(c: c_int) c_int {
+pub export fn tolower(c: c_int) callconv(.c) c_int {
     return ascii.toLower(c);
 }
 
@@ -109,6 +109,6 @@ pub export fn tolower(c: c_int) c_int {
 /// otherwise the argument is returned unchanged. In the C locale,
 /// toupper maps only the characters for which islower is true to
 /// the corresponding characters for which isupper is true.
-pub export fn toupper(c: c_int) c_int {
+pub export fn toupper(c: c_int) callconv(.c) c_int {
     return ascii.toUpper(c);
 }
