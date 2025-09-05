@@ -1,3 +1,4 @@
+pub const assert = @import("assert.zig");
 pub const errno = @import("errno.zig");
 pub const float = @import("float.zig");
 pub const limits = @import("limits.zig");

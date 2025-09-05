@@ -423,6 +423,7 @@ fn zigTypeToC(allocator: std.mem.Allocator, t: []const u8) ![]const u8 {
         .{ "f80", "long double" },
         .{ "bool", "bool" },
         .{ "anyopaque", "void" },
+        .{ "void", "void" },
     });
 
     if (std.mem.startsWith(u8, t, "[*c]")) {
