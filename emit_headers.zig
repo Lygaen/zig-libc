@@ -19,6 +19,14 @@ pub const Export = struct {
             name: []const u8,
             c_type: []const u8,
         },
+        struct_type: struct {
+            name: []const u8,
+            fields: []struct {
+                name: []const u8,
+                c_type: []const u8,
+                comment: []const u8,
+            },
+        },
     },
     comment: []const u8,
 
@@ -29,7 +37,7 @@ pub const Export = struct {
         const name = ast.tokenSlice(fn_proto.name_token orelse unreachable);
 
         const ret_type_fn = fn_proto.ast.return_type.unwrap() orelse return error.NoReturnType;
-        const ret_type_slice = ast.tokenSlice(ast.firstToken(ret_type_fn));
+        const ret_type_slice = ast.getNodeSource(ret_type_fn);
 
         var allocating: std.io.Writer.Allocating = try .initCapacity(allocator, 100);
         var writer = &allocating.writer;
@@ -63,7 +71,70 @@ pub const Export = struct {
         };
     }
 
-    pub fn fromVariableProto(allocator: std.mem.Allocator, comment: []const u8, var_proto: Ast.full.VarDecl, ast: *const Ast) !?Export {
+    pub fn fromContainerProto(
+        allocator: std.mem.Allocator,
+        comment: []const u8,
+        name: []const u8,
+        cont_proto: Ast.full.ContainerDecl,
+        ast: *const Ast,
+    ) !?Export {
+        const FieldType = @typeInfo(@FieldType(
+            @FieldType(
+                @FieldType(Export, "value"),
+                "struct_type",
+            ),
+            "fields",
+        )).pointer.child;
+        var list: std.ArrayList(FieldType) = try .initCapacity(allocator, 10);
+        defer list.deinit(allocator);
+
+        var exp: Export = undefined;
+        exp.comment = comment;
+        exp.value = .{
+            .struct_type = .{
+                .name = try allocator.dupe(
+                    u8,
+                    name,
+                ),
+                .fields = undefined,
+            },
+        };
+
+        for (cont_proto.ast.members) |member| {
+            const is_field = ast.fullContainerField(member);
+            if (is_field == null)
+                continue;
+
+            const field = is_field.?;
+            const has_type = field.ast.type_expr.unwrap();
+            if (has_type == null) {
+                return error.FieldUnspecifiedType;
+            }
+            const t_name = ast.getNodeSource(has_type.?);
+            const f_name = ast.tokenSlice(field.ast.main_token);
+            const field_comment = try searchDocComment(
+                ast,
+                allocator,
+                field.ast.main_token,
+            );
+
+            try list.append(allocator, .{
+                .name = try allocator.dupe(u8, f_name),
+                .c_type = try zigTypeToC(allocator, t_name),
+                .comment = try allocator.dupe(u8, field_comment),
+            });
+        }
+        exp.value.struct_type.fields = try list.toOwnedSlice(allocator);
+
+        return exp;
+    }
+
+    pub fn fromVariableProto(
+        allocator: std.mem.Allocator,
+        comment: []const u8,
+        var_proto: Ast.full.VarDecl,
+        ast: *const Ast,
+    ) !?Export {
         const is_pub = var_proto.visib_token != null;
         const is_export = var_proto.extern_export_token != null;
         var name = ast.tokenSlice(var_proto.ast.mut_token + 1);
@@ -75,7 +146,11 @@ pub const Export = struct {
         if (!is_pub)
             return null;
 
-        if (is_export and std.mem.eql(u8, ast.tokenSlice(var_proto.extern_export_token orelse unreachable), "extern")) {
+        if (is_export and std.mem.eql(
+            u8,
+            ast.tokenSlice(var_proto.extern_export_token orelse unreachable),
+            "extern",
+        )) {
             std.debug.print("Invalid definition for {s}\n", .{name});
             return null;
         }
@@ -87,6 +162,14 @@ pub const Export = struct {
                 std.debug.print("Constant {s} does not define a value\n", .{name});
                 return null;
             };
+
+            var buffer: [2]std.zig.Ast.Node.Index = undefined;
+            const is_container = ast.fullContainerDecl(&buffer, init_index);
+
+            if (is_container) |container| {
+                return try fromContainerProto(allocator, comment, name, container, ast);
+            }
+
             var init_slice = ast.getNodeSource(init_index);
 
             const MACRO_EXPANSION = "Macro: ";
@@ -144,6 +227,15 @@ pub const Export = struct {
             .constant => |c| {
                 allocator.free(c.name);
                 allocator.free(c.value);
+            },
+            .struct_type => |s| {
+                allocator.free(s.name);
+
+                for (s.fields) |field| {
+                    allocator.free(field.name);
+                    allocator.free(field.c_type);
+                    allocator.free(field.comment);
+                }
             },
             else => {},
         }
@@ -377,8 +469,6 @@ pub fn generateCHeaderFile(allocator: std.mem.Allocator, name: []const u8, expor
         if (exp.value == .container_comment)
             continue;
 
-        //try writer.print("\n", .{});
-
         if (exp.comment.len != 0) {
             var split = std.mem.splitScalar(u8, exp.comment, '\n');
             while (split.next()) |sp| {
@@ -396,6 +486,21 @@ pub fn generateCHeaderFile(allocator: std.mem.Allocator, name: []const u8, expor
             },
             .extern_variable => |e| {
                 try writer.print("extern {s} {s};\n", .{ e.c_type, e.name });
+            },
+            .struct_type => |s| {
+                try writer.print("struct {s} {{\n", .{s.name});
+
+                for (s.fields) |field| {
+                    if (field.comment.len != 0) {
+                        var split = std.mem.splitScalar(u8, field.comment, '\n');
+                        while (split.next()) |sp| {
+                            try writer.print("  // {s}\n", .{sp});
+                        }
+                    }
+                    try writer.print("  {s} {s};\n", .{ field.c_type, field.name });
+                }
+
+                try writer.print("}};\n", .{});
             },
         }
         try writer.print("\n", .{});
@@ -439,8 +544,7 @@ fn zigTypeToC(allocator: std.mem.Allocator, t: []const u8) ![]const u8 {
     }
 
     return try allocator.dupe(u8, TYPES_MAP.get(t) orelse {
-        std.debug.print("Unknown type {s}\n", .{t});
-        return try allocator.dupe(u8, "UNKNOWN_TYPE");
+        return try allocator.dupe(u8, t);
     });
 }
 
