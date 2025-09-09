@@ -1,0 +1,24 @@
+name: Build
+run-name: ${{ github.actor }}
+
+on:
+  pull_request:
+  push:
+
+env:
+  ZIG_VERSION: 0.15.1
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    name: Build
+    steps:
+      - uses: actions/checkout@v3
+      - uses: mlugg/setup-zig@v2
+        with:
+          version: ${{ env.ZIG_VERSION }}
+          cache-key: ${{ matrix.os }}-${{ env.ZIG_VERSION }}
+      - run: zig build install
