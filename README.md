@@ -1,2 +1,3 @@
-<img align="left" width="80" height="80" src="./.github/icon.png" alt="Zig Libc Icon">
+<img align="left" width="76" height="84" src="./.github/icon.png" alt="Zig Libc Icon">
+
 # Zig LIBC
