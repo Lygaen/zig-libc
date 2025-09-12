@@ -1,0 +1,12 @@
+#undef CHAR_BIT
+
+#undef CHAR_MAX
+#undef SCHAR_MAX
+
+#undef SHORT_MAX
+#undef INT_MAX
+#undef LONG_MAX
+
+#undef WCHAR_TYPE
+#undef PTR_DIFF_TYPE
+#undef SIZE_TYPE
