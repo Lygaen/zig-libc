@@ -15,7 +15,7 @@ This is a re-implementation of Libc in Zig. It is following the C standard for t
 
 Projects that are similar may be `musl` (which helped me a lot) or [`ziglibc`](https://github.com/marler8997/ziglibc). The latter one feels outdated for the tooling and doesn't fully implement all of the libc.
 
-This project is a big one, it may never be finished (`musl` is still being developed). However, Zig allows for sugar coating that can be added to it : tracing, thread safety, ... The project even generates its own headers depending on the target !
+This project is a big one, it may never be finished (`musl` is still being developed). However, Zig allows for sugar coating that can be added to it : tracing, thread safety, ... The project even configures its own headers depending on the target !
 
 ## Commands
 The following can be done for building libc :
@@ -23,14 +23,13 @@ The following can be done for building libc :
 $ zig build install
 ```
 
-It will generate a `zig-out/lib/` folder with the static library and a `zig-out/include/` with the generated headers.
+It will generate a `zig-out/lib/` folder with the static library and a `zig-out/include/` with the configured headers.
 
 You can also run :
 ```sh
 $ zig build docs
 ```
-to generate the documentation for the __zig__ side of things. The documentation for the c interface is already appended as comments in front of the relevant fields in the generated headers.
-
+to generate the documentation for the __zig__ side of things.
 ## Usage in Zig
 For the time being, the library is not recommended to be used __anywhere__. If you want to go as far as using this library personnaly, you can anyway run the following :
 
