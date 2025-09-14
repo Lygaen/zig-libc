@@ -14,5 +14,7 @@
 #define SIG_DFL 0
 #define SIG_IGN 1
 
+void (*signal(int, void (*)(int)))(int);
+int raise(int);
 
 #endif // __SIGNAL_H__
