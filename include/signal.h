@@ -3,12 +3,12 @@
 
 #define sig_atomic_t int
 
-#define SIGABRT 0
-#define SIGFPE 1
-#define SIGILL 2
-#define SIGINT 3
-#define SIGSEGV 4
-#define SIGTERM 5
+#define SIGINT 2
+#define SIGILL 5
+#define SIGABRT 6
+#define SIGFPE 8
+#define SIGSEGV 11
+#define SIGTERM 15
 
 #define SIG_ERR 1
 #define SIG_DFL 0

@@ -1,4 +1,5 @@
 const std = @import("std");
+pub const allocator = std.heap.smp_allocator;
 
 pub const assert = @import("assert.zig");
 pub const ctype = @import("ctype.zig");
@@ -16,8 +17,6 @@ const c = struct {
 };
 
 pub fn main() !u8 {
-    const allocator = std.heap.smp_allocator;
-
     const temp_args = try std.process.argsAlloc(allocator);
 
     const args: [:null]?[*c]u8 = try allocator.allocSentinel(?[*c]u8, temp_args.len, null);
