@@ -12,10 +12,9 @@
 //! a digit or E and an upper-case letter, may also be
 //! specified by the implementation.
 
-/// Represents a domain error for a math function.
-pub const EDOM = 33;
-/// Represents a range error for a math function.
-pub const ERANGE = 34;
+pub const c = @cImport(
+    @cInclude("./include/errno.h"),
+);
 
 /// Variable which expands to a modifiable lvalue that
 /// has type int, the value of which is set to a positive

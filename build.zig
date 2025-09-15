@@ -47,6 +47,7 @@ pub fn build(b: *std.Build) void {
         const dir = std.fs.cwd().openDir("./include/", .{
             .iterate = true,
         }) catch @panic("Include folder not found");
+        libc_mod.addIncludePath(b.path("."));
         var files = dir.iterate();
 
         while (files.next() catch null) |file| {

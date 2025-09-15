@@ -126,25 +126,9 @@ pub export const lconv = struct {
     };
 };
 
-/// LC_CTYPE affects the behavior of the character handling functions
-/// and the multibyte functions.
-pub export const LC_CTYPE = 0;
-/// LC_NUMERIC affects the decimal-point character for the formatted
-/// input/output functions and the string conversion functions, as
-/// well as the non-monetary formatting information returned by the
-/// localeconv function.
-pub export const LC_NUMERIC = 1;
-/// LC_TIME affects the behavior of the strftime function.
-pub export const LC_TIME = 2;
-/// LC_COLLATE affects the behavior of the strcoll and strxfrm functions
-pub export const LC_COLLATE = 3;
-/// LC_MONETARY affects the monetary formatting information
-/// returned by the localeconv function.
-pub export const LC_MONETARY = 4;
-/// The value LC_ALL for category names the
-/// program's entire locale; the other values for category
-/// name only a portion of the program's locale.
-pub export const LC_ALL = 6;
+const c = @cImport(
+    @cInclude("./include/locale.h"),
+);
 
 /// The setlocale function selects the appropriate portion
 /// of the program's locale as specified by the category and

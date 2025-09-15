@@ -7,6 +7,7 @@ pub const float = @import("float.zig");
 pub const limits = @import("limits.zig");
 pub const locale = @import("locale.zig");
 pub const math = @import("math.zig");
+pub const signal = @import("signal.zig");
 pub const stdarg = @import("stdarg.zig");
 pub const stddef = @import("stddef.zig");
 
