@@ -10,23 +10,12 @@ const c = @cImport({
 const CCallback = [*c]fn (c_int) callconv(.c) void;
 
 pub export fn signal(sig: c_int, handler: CCallback) CCallback {
-    const action = std.posix.Sigaction{
-        .handler = .{ .handler = handler },
-        .mask = std.posix.empty_sigset,
-        .flags = 0,
-    };
-
-    const oact = std.posix.Sigaction{};
-    std.posix.sigaction(sig, action, &oact);
-
-    if (oact.handler.handler) |h| {
-        return h;
-    }
-    return null;
+    _ = sig; // autofix
+    _ = handler; // autofix
+    return c.SIG_ERR;
 }
 
 pub export fn raise(sig: c_int) callconv(.c) c_int {
-    std.posix.raise(@truncate(sig)) catch return 1;
-
-    return 0;
+    _ = sig; // autofix
+    return 1;
 }
