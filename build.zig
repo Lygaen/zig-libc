@@ -260,4 +260,15 @@ pub fn generateConfigValues(
             ptr_bit_size,
         ),
     );
+
+    addValueIdent(
+        conf,
+        "INT64_T",
+        computeFixedType(
+            target,
+            allocator,
+            .signed,
+            64,
+        ),
+    );
 }

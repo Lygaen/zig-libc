@@ -74,10 +74,10 @@ Currently the goal is to implement `C89` (see [the standard](https://port70.net/
   - [x] math.h
   - [ ] stdio.h
   - [x] errno.h
-  - [ ] setjmp.h
+  - [x] setjmp.h (it is a STUB)
   - [ ] stdlib.h
   - [x] float.h
-  - [ ] signal.h
+  - [x] signal.h (it is a STUB)
   - [ ] string.h
   - [x] limits.h
   - [x] stdarg.h

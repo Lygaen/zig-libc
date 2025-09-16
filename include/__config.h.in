@@ -10,3 +10,5 @@
 #undef WCHAR_TYPE
 #undef PTR_DIFF_TYPE
 #undef SIZE_TYPE
+
+#undef INT64_T
